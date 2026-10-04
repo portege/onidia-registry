@@ -7,6 +7,12 @@
 //
 // Every mutating call sends the CSRF token that /api/users/me hands back, which
 // is what stops another *.babeh.com subdomain from riding the cookie.
+//
+// Most of the UI is built by assigning to innerHTML, because the markup here is
+// structural (cards, chips, definition lists) and a framework would be a large
+// dependency for a static page. That makes esc() load-bearing: every field that
+// came from the API goes through it before it is concatenated into markup. See
+// the esc() definition for why that is not optional.
 
 (function () {
   'use strict';
@@ -43,12 +49,22 @@
       credentials: 'include',
       body: opts.body ? JSON.stringify(opts.body) : undefined
     });
+    // A 200 with no body is not a thing the API does, but a misbehaving edge in
+    // front of it can produce exactly that - and the old code then carried on
+    // with `null` and threw a TypeError deep in a renderer, which reads as "the
+    // page is broken" with no clue why. Fail with a message instead.
     var data = null;
-    try { data = await res.json(); } catch (e) { /* empty body is fine */ }
+    try { data = await res.json(); } catch (e) { data = null; }
     if (!res.ok) {
       var err = new Error((data && data.error) || ('HTTP ' + res.status));
       err.status = res.status;
       throw err;
+    }
+    if (data === null) {
+      var e2 = new Error('the server sent no JSON (' + res.status + ' ' +
+        (res.headers.get('content-length') || '?') + ' bytes)');
+      e2.status = res.status;
+      throw e2;
     }
     return data;
   }
@@ -87,7 +103,28 @@
 
   // --- rendering --------------------------------------------------------
 
-  function esc(s) { return text(s); }
+  // Two helpers, and the difference matters.
+  //
+  // text() is for text nodes: name.textContent = '@' + text(u.login). Safe for
+  // anything, because assigning to textContent can never be interpreted as markup.
+  //
+  // esc() is for innerHTML, and it is the one that has to actually escape. It
+  // used to be a one-liner that just ran the value through text(), which
+  // stringifies and escapes nothing - a name that promised escaping and a body
+  // that did none. Nothing looked broken, because the CSP is script-src 'self'
+  // with no unsafe-inline, so an injected <img onerror=...> never runs. But that
+  // is the CSP doing a job it was never meant to cover, and it is one CSP edit
+  // away from stored XSS on a page whose entire job is displaying strings that
+  // strangers wrote.
+  //
+  // The description is genuinely attacker-controlled: validateManifest in the
+  // backend only checks that it is non-empty, because a description is free text
+  // by design and the model is meant to read it. Escaping belongs here, and
+  // frontend_test.go fails the build if this stops escaping.
+  var ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function esc(s) {
+    return text(s).replace(/[&<>"']/g, function (c) { return ESCAPES[c]; });
+  }
 
   function statusChip(a) {
     if (a.status === 'approved') return '<span class="chip ok">published</span>';
@@ -158,6 +195,11 @@
         '<span class="chip">' + a.installs + ' install' + (a.installs === 1 ? '' : 's') + '</span>' +
         '<span class="chip">v' + esc(a.version) + '</span>' +
         (a.author_login ? '<span class="chip">@' + esc(a.author_login) + '</span>' : '') +
+        // source_repo lands in an href, so it gets esc() like everything else.
+        // It is also already constrained upstream - validRepoRef in the backend
+        // is ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$, so it cannot be a javascript:
+        // URL - but that is a second line of defence, not the reason this is
+        // safe. rel=noopener because it opens github.com, not us.
         (a.source_repo ? '<a class="chip" href="' + esc(a.source_repo) + '" rel="noopener">source</a>' : '') +
       '</div>' +
       '<dl class="kv">' +
