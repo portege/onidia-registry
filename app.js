@@ -11,8 +11,18 @@
 (function () {
   'use strict';
 
-  //var API = 'https://agent-registry.babeh.com';
-  var API = 'https://62ssyzz6wp56vf6c243656cdt40zdljj.lambda-url.ap-southeast-3.on.aws';
+  // The API origin comes from <meta name="api-base"> rather than living here.
+  // It used to be hardcoded in three places at once - this file, the CSP, and
+  // the sign-in link - so moving to a different function URL broke the CSP while
+  // the app still pointed somewhere plausible. One source of truth now, and
+  // frontend_test.go in ../backend fails the build if the CSP and this disagree.
+  var API = (function () {
+    var m = document.querySelector('meta[name="api-base"]');
+    return m ? m.getAttribute('content').replace(/\/+$/, '') : '';
+  })();
+  if (!API) {
+    console.error('agent registry: no <meta name="api-base"> in the page');
+  }
   var me = null;          // { authenticated, user, csrf_token }
 
   var $ = function (id) { return document.getElementById(id); };
