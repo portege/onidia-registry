@@ -11,7 +11,8 @@
 (function () {
   'use strict';
 
-  var API = 'https://agent-registry.babeh.com';
+  //var API = 'https://agent-registry.babeh.com';
+  var API = 'https://62ssyzz6wp56vf6c243656cdt40zdljj.lambda-url.ap-southeast-3.on.aws';
   var me = null;          // { authenticated, user, csrf_token }
 
   var $ = function (id) { return document.getElementById(id); };
