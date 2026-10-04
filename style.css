@@ -14,7 +14,12 @@
   --glass:rgba(255,255,255,.045); --glass-2:rgba(255,255,255,.075);
   --grad-teal:linear-gradient(180deg,var(--teal-lt),var(--teal) 55%,var(--teal-dk));
   --grad-pink:linear-gradient(135deg,var(--pink-lt),var(--pink) 60%,var(--pink-dk));
-  --r-s:14px; --r-m:20px; --maxw:1080px;
+  /* --r-l was referenced by .detail but never defined, so that declaration was
+     invalid at computed-value time and the browser dropped the whole
+     border-radius: the detail panel rendered with square corners while every
+     other panel was rounded. A missing custom property does not fall back to
+     0 or to a previous value - it invalidates the declaration it appears in. */
+  --r-s:14px; --r-m:20px; --r-l:26px; --maxw:1080px;
   --ease:cubic-bezier(.22,.61,.36,1);
 }
 *{box-sizing:border-box}
