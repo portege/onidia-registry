@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent registry &mdash; Onidia</title>
+<meta name="description" content="Publish and install Onidia agents. Browse what is available, star what works, and share your own.">
+<link rel="stylesheet" href="style.css">
+<!-- No inline script and no third-party origin: the page is the only place a
+     token could ever be read from, so the CSP is as tight as it can be. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://avatars.githubusercontent.com; connect-src https://agent-registry.babeh.com; form-action 'none'; base-uri 'none'; frame-ancestors 'none'">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="#/">ONIDIA<em> agents</em></a>
+  <span class="spacer"></span>
+  <div class="who">
+    <span id="who"></span>
+    <a id="login" class="btn" href="https://agent-registry.babeh.com/login">Sign in with GitHub</a>
+    <button id="logout" class="ghost" hidden>Sign out</button>
+  </div>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Agent registry</span>
+  <h1 style="margin-top:18px">Give her <span style="color:var(--teal-tx)">more to do.</span></h1>
+  <p class="lede">An agent is a folder she can call. Publish yours from a GitHub repository, or
+    install someone else's with <code>onidia-chat -agents-install &lt;id&gt;</code>. The same index
+    powers both, so anything listed here is one command away.</p>
+  <div class="search">
+    <input type="search" id="q" placeholder="Search agents&hellip;" aria-label="Search agents">
+    <button id="refresh" class="ghost">Refresh</button>
+  </div>
+  <div id="list" class="grid"></div>
+  <p id="empty" class="empty" hidden>Nothing matches that.</p>
+</div></section>
+
+<section id="detail-sec" hidden><div class="wrap">
+  <div id="detail" class="detail"></div>
+</div></section>
+
+<section id="share-sec" hidden><div class="wrap">
+  <h2>Share an agent</h2>
+  <p class="lede" style="margin-top:0">Point at a <strong>public</strong> GitHub repository that
+    contains an <code>agent.json</code>. We fetch it, validate the manifest, and repackage only that
+    folder &mdash; nothing from your repository is ever executed here.</p>
+  <div class="detail">
+    <div class="msg err" id="share-err" hidden></div>
+    <p><label for="repo">Repository</label><br>
+      <input type="text" id="repo" placeholder="owner/name or https://github.com/owner/name"></p>
+    <p><label for="path">Folder inside the repository <span class="chip">optional</span></label><br>
+      <input type="text" id="path" placeholder="agents/my_agent &mdash; leave empty if agent.json is at the root"></p>
+    <p><button id="publish" class="primary">Publish</button></p>
+    <div class="msg ok" id="share-ok" hidden></div>
+  </div>
+</div></section>
+
+<footer class="wrap" style="padding:30px 22px;color:var(--faint);font-size:.84rem;border-top:1px solid var(--edge)">
+  <a href="https://agent-registry.babeh.com/registry.json">registry.json</a>
+  &nbsp;&middot;&nbsp; install with
+  <code>onidia-chat -agents-install &lt;id&gt;</code>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
