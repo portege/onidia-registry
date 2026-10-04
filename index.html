@@ -6,8 +6,17 @@
 <title>Agent registry &mdash; Onidia</title>
 <meta name="description" content="Publish and install Onidia agents. Browse what is available, star what works, and share your own.">
 <link rel="stylesheet" href="style.css">
+
+<!-- THE API ORIGIN. One place, and everything else follows:
+       - app.js reads it from here, so there is no URL to keep in sync
+       - connect-src below MUST match it, or every fetch is blocked
+       - the Sign-in link and the footer link point at the same origin
+     backend/frontend_test.go fails the build if any of those drift apart.
+     Change it here and nowhere else. -->
+<meta name="api-base" content="https://agent-registry.babeh.com">
+
 <!-- No inline script and no third-party origin: the page is the only place a
-     token could ever be read from, so the CSP is as tight as it can be. -->
+     session could ever be read from, so the CSP is as tight as it can be. -->
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://avatars.githubusercontent.com; connect-src https://agent-registry.babeh.com; form-action 'none'; base-uri 'none'; frame-ancestors 'none'">
 </head>
@@ -58,7 +67,7 @@
 </div></section>
 
 <footer class="wrap" style="padding:30px 22px;color:var(--faint);font-size:.84rem;border-top:1px solid var(--edge)">
-  <a href="https://agent-registry.babeh.com/registry.json">registry.json</a>
+  <a id="idxlink" href="https://agent-registry.babeh.com/registry.json">registry.json</a>
   &nbsp;&middot;&nbsp; install with
   <code>onidia-chat -agents-install &lt;id&gt;</code>
 </footer>
