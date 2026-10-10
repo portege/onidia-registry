@@ -141,7 +141,8 @@
       card.className = 'card';
       card.innerHTML =
         '<a class="id" href="#/agent/' + encodeURIComponent(a.id) + '">' + esc(a.id) + '</a>' +
-        '<p>' + esc(a.description) + '</p>' +
+        '<div class="desc"><div class="body">' + esc(a.description) + '</div>' +
+        '<button type="button" class="more" aria-expanded="false">Show more</button></div>' +
         '<div class="meta">' +
           statusChip(a) +
           '<span class="chip star">&#9733; ' + a.stars + '</span>' +
@@ -151,6 +152,7 @@
         '</div>';
       list.appendChild(card);
     });
+    fitDescriptions(list);
   }
 
   async function loadList() {
@@ -188,7 +190,8 @@
     d.innerHTML =
       '<a href="#/" class="chip">&larr; all agents</a>' +
       '<h2 style="margin-top:14px">' + esc(a.id) + '</h2>' +
-      '<p class="lede">' + esc(a.description) + '</p>' +
+      '<div class="lede desc detail-desc"><div class="body">' + esc(a.description) + '</div>' +
+      '<button type="button" class="more" aria-expanded="false">Show more</button></div>' +
       '<div class="meta" style="margin-top:14px">' +
         statusChip(a) +
         '<span class="chip star">&#9733; ' + a.stars + '</span>' +
@@ -221,6 +224,7 @@
         '<button id="copybtn" class="ghost">Copy the command</button></p>';
     $('copybtn').addEventListener('click', copySnippet);
     $('starbtn').addEventListener('click', function () { toggleStar(a, d); });
+    fitDescriptions(d);
   }
 
   async function toggleStar(a, container) {
@@ -251,6 +255,53 @@
     }
   }
 
+  // --- expandable descriptions -------------------------------------------
+  //
+  // Descriptions are written for the model and run to a dozen lines. The grid
+  // stretches every card in a row to the tallest one, so a single long
+  // description used to make the whole page tall; clamp to DESC_LINES instead
+  // and offer a toggle. The toggle only appears when the text really does
+  // overflow the clamp, so a short description keeps its natural height and
+  // never carries a pointless "Show more".
+  //
+  // The buttons are bound once, by delegation on document: descriptions are
+  // rebuilt from scratch on every render, and per-card listeners would be
+  // left behind with the nodes they were bound to.
+
+  var DESC_LINES = 4;        // cards in the grid
+  var DETAIL_LINES = 6;      // detail page, where this is the main text
+
+  function descLines(d) {
+    return d.classList.contains('detail-desc') ? DETAIL_LINES : DESC_LINES;
+  }
+
+  function setDescOpen(d, open) {
+    d.classList.toggle('open', open);
+    var b = d.querySelector('.more');
+    if (b) {
+      b.textContent = open ? 'Show less' : 'Show more';
+      b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+  }
+
+  function fitDesc(d) {
+    var body = d.querySelector('.body');
+    if (!body) return;
+    var cs = getComputedStyle(body);
+    var lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.6;
+    // scrollHeight stays at the full text height while the clamp is active,
+    // so comparing it against the clamp height says "truncated" whether or
+    // not the description is currently open.
+    var over = body.scrollHeight > descLines(d) * lh + 1;
+    d.classList.toggle('more', over);
+    if (!over) setDescOpen(d, false);
+  }
+
+  function fitDescriptions(root) {
+    var ds = (root || document).querySelectorAll('.desc');
+    Array.prototype.forEach.call(ds, fitDesc);
+  }
+
   // --- routing ----------------------------------------------------------
 
   function route() {
@@ -275,6 +326,16 @@
       window.location.href = '/';
     });
     $('publish').addEventListener('click', publish);
+    // One delegated listener toggles every description: the cards are
+    // re-rendered wholesale, so per-button bindings would not survive.
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button.more') : null;
+      var d = b && b.closest('.desc');
+      if (d) setDescOpen(d, !d.classList.contains('open'));
+    });
+    // Clamp metrics are font-metric based, so a resize can bring text back
+    // under (or push it over) the threshold.
+    window.addEventListener('resize', debounce(function () { fitDescriptions(); }, 150));
 
     await loadSession();
     route();
