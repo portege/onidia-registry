@@ -189,10 +189,10 @@
     var starred = me.authenticated && me.stars && me.stars[id];
     d.innerHTML =
       '<a href="#/" class="chip">&larr; all agents</a>' +
-      '<h2 style="margin-top:14px">' + esc(a.id) + '</h2>' +
+      '<h2 class="detail-title">' + esc(a.id) + '</h2>' +
       '<div class="lede desc detail-desc"><div class="body">' + esc(a.description) + '</div>' +
       '<button type="button" class="more" aria-expanded="false">Show more</button></div>' +
-      '<div class="meta" style="margin-top:14px">' +
+      '<div class="meta detail-meta">' +
         statusChip(a) +
         '<span class="chip star">&#9733; ' + a.stars + '</span>' +
         '<span class="chip">' + a.installs + ' install' + (a.installs === 1 ? '' : 's') + '</span>' +
@@ -219,7 +219,7 @@
               (p.description ? ' &mdash; ' + esc(p.description) : '') + '</li>';
           }).join('') + '</ul>'
         : '') +
-      '<p style="margin-top:20px"><button id="starbtn" class="primary">' +
+      '<p class="detail-actions"><button id="starbtn" class="primary">' +
         (starred ? 'Unstar' : 'Star') + ' this agent</button> ' +
         '<button id="copybtn" class="ghost">Copy the command</button></p>';
     $('copybtn').addEventListener('click', copySnippet);
