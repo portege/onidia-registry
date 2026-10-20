@@ -232,6 +232,16 @@
     try {
       var r = await api('/api/agents/' + encodeURIComponent(a.id) + '/star', { method: 'POST' });
       a.stars = r.stars;
+      // The star state has to be written back into the session, or the
+      // re-render below reads the value from before the click and the
+      // button still says "Star" for an agent that is now starred. The
+      // server sends the state AFTER the toggle, so this is not a guess.
+      if (me.stars) {
+        if (r.starred) { me.stars[a.id] = true; } else { delete me.stars[a.id]; }
+      } else {
+        me.stars = {};
+        if (r.starred) { me.stars[a.id] = true; }
+      }
       showAgent(a.id);
       loadList();
     } catch (e) {
